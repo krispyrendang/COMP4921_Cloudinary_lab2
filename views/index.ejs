@@ -8,6 +8,10 @@
 		<script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"> </script>
 	</head>
 	<body>
+		<script type="text/javascript"> 
+			$.cloudinary.config({ cloud_name: '<%= process.env.CLOUDINARY_CLOUD_NAME %>', secure: true});
+		</script>
+		
 		<section class="section">
 			<div class="maincolumns columns is-desktop is-vcentered">
 				<div class="column is-10 is-offset-1 notification is-info is-light box container">
@@ -22,7 +26,7 @@
 								<th> First Name </th>
 								<th> Last Name </th>
 								<th> Email </th>
-								<th> &nbsp; </th>
+								<th> Photo </th>
 								<th> &nbsp; </th>
 								<th> &nbsp; </th>
 								<th> &nbsp; </th>
@@ -137,5 +141,14 @@
 				</div>
 			</div>
 		</section>
+		<script>
+			const fileInput = document.querySelector('#picture-upload input[type=file]');
+			fileInput.onchange = () => {
+			  if (fileInput.files.length > 0) {
+				const fileName = document.querySelector('#picture-upload .file-name');
+				fileName.textContent = fileInput.files[0].name;
+			  }
+			}
+		</script>
 	</body>
 </html>
