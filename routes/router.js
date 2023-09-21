@@ -37,7 +37,7 @@ router.get('/', async (req, res) => {
 
 
 	try {
-		const users = await userCollection.find().project({first_name: 1, last_name: 1, email: 1, _id: 1}).toArray();
+		const users = await userCollection.find().project({first_name: 1, last_name: 1, email: 1, image_id: 1, _id: 1}).toArray();
 
 		if (users === null) {
 			res.render('error', {message: 'Error connecting to MongoDB'});
@@ -211,11 +211,11 @@ router.get('/deleteUser', async (req, res) => {
 	}
 });
 
-//Adds a Pic for Users !!Check the Table References!!
+//Adds a Pic for Users
 router.post('/setUserPic', upload.single('image'), function(req, res, next) {
 	let image_uuid = uuid();
-	let pet_id = req.body.pet_id;
 	let user_id = req.body.user_id;
+
 	let buf64 = req.file.buffer.toString('base64');
 	stream = cloudinary.uploader.upload("data:image/octet-stream;base64," + buf64, async function(result) { 
 			try {
@@ -227,29 +227,26 @@ router.post('/setUserPic', upload.single('image'), function(req, res, next) {
 				// Joi validate
 				const schema = Joi.object(
 				{
-					pet_id: Joi.string().alphanum().min(24).max(24).required(),
 					user_id: Joi.string().alphanum().min(24).max(24).required()
 				});
 			
-				const validationResult = schema.validate({pet_id, user_id});
+				const validationResult = schema.validate({user_id}); 
 				if (validationResult.error != null) {
 					console.log(validationResult.error);
 
-					res.render('error', {message: 'Invalid pet_id or user_id'});
+					res.render('error', {message: 'Invalid user_id'});
 					return;
 				}				
-				const success = await petCollection.updateOne({"_id": new ObjectId(pet_id)},
+				const success = await userCollection.updateOne({"_id": new ObjectId(user_id)},
 					{$set: {image_id: image_uuid}},
 					{}
 				);
 
 				if (!success) {
-					res.render('error', {message: 'Error uploading pet image to MongoDB'});
-					console.log("Error uploading pet image");
+					res.render('error', {message: 'Error uploading user image to MongoDB'});
+					console.log("Error uploading user image");
 				}
-				else {
-					res.redirect(`/showPets?id=${user_id}`);
-				}
+				res.redirect("/");
 			}
 			catch(ex) {
 				res.render('error', {message: 'Error connecting to MongoDB'});
@@ -259,48 +256,47 @@ router.post('/setUserPic', upload.single('image'), function(req, res, next) {
 		}, 
 		{ public_id: image_uuid }
 	);
+	
 	console.log(req.body);
 	console.log(req.file);
 });
 
-//Removes a Pic for Users !!Check the Table References!!
+//Removes a Pic for Users 
 router.get('/deleteUserImage', async (req, res) => {
 	try {
-		console.log("delete pet image");
+		console.log("delete user image");
 
-		let pet_id = req.query.id;
-		let user_id = req.query.user;
+		let user_id = req.query.id;
 
 		const schema = Joi.object(
 			{
-				user_id: Joi.string().alphanum().min(24).max(24).required(),
-				pet_id: Joi.string().alphanum().min(24).max(24).required(),
+				user_id: Joi.string().alphanum().min(24).max(24).required()
 			});
 		
-		const validationResult = schema.validate({user_id, pet_id});
+		const validationResult = schema.validate({user_id}); 
 		
 		if (validationResult.error != null) {
 			console.log(validationResult.error);
 
-			res.render('error', {message: 'Invalid user_id or pet_id'});
+			res.render('error', {message: 'Invalid user_id'});
 			return;
 		}				
 
-		if (pet_id) {
-			console.log("petId: "+pet_id);
-			const success = await petCollection.updateOne({"_id": new ObjectId(pet_id)},
+		if (user_id) {
+			console.log("userId: "+user_id);
+			const success = await userCollection.updateOne({"_id": new ObjectId(user_id)},
 				{$set: {image_id: undefined}},
 				{}
 			);
 
-			console.log("delete Pet Image: ");
+			console.log("delete User Image: ");
 			console.log(success);
 			if (!success) {
 				res.render('error', {message: 'Error connecting to MySQL'});
 				return;
 			}
 		}
-		res.redirect(`/showPets?id=${user_id}`);
+		res.redirect("/");
 	}
 	catch(ex) {
 		res.render('error', {message: 'Error connecting to MySQL'});
